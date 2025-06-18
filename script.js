@@ -175,33 +175,34 @@ function startQRScanner() {
         feather.replace();
     }
     
-    // Add multiple event listeners for modal close to ensure it works
+    // Simple and direct close button setup
     const closeBtn = modal.querySelector('.close-btn');
     if (closeBtn) {
-        // Remove any existing listeners first
-        closeBtn.replaceWith(closeBtn.cloneNode(true));
-        const newCloseBtn = modal.querySelector('.close-btn');
+        // Clear any existing event handlers
+        closeBtn.onclick = null;
+        closeBtn.onmousedown = null;
+        closeBtn.ontouchstart = null;
         
-        // Add onclick handler
-        newCloseBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // Set up a single, reliable click handler
+        closeBtn.onclick = function() {
+            console.log('Close button clicked');
             closeQRScanner();
+            return false;
         };
         
-        // Add addEventListener as backup
-        newCloseBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // Add mousedown as additional backup
+        closeBtn.onmousedown = function() {
+            console.log('Close button mousedown');
             closeQRScanner();
-        });
+            return false;
+        };
         
-        // Add touch event for mobile
-        newCloseBtn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // Add touchstart for mobile
+        closeBtn.ontouchstart = function() {
+            console.log('Close button touchstart');
             closeQRScanner();
-        });
+            return false;
+        };
     }
     
     // Close on background click
@@ -276,6 +277,46 @@ function showQRFileFallback() {
             <button class="btn btn-primary" onclick="scanQRFromFile()">Scansiona da File</button>
         </div>
     `;
+    
+    // Ripristina il funzionamento del pulsante di chiusura dopo il fallback
+    setTimeout(() => {
+        const modal = document.getElementById('qr-modal');
+        const closeBtn = modal ? modal.querySelector('.close-btn') : null;
+        if (closeBtn) {
+            // Remove existing event listeners
+            closeBtn.onclick = null;
+            closeBtn.onmousedown = null;
+            closeBtn.ontouchstart = null;
+            closeBtn.ontouchend = null;
+            
+            // Direct action for closing modal - simple and reliable
+            const closeAction = function() {
+                console.log('Close button activated (fallback mode)');
+                const modal = document.getElementById('qr-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+                return false;
+            };
+            
+            // Set up multiple event handlers for maximum compatibility
+            closeBtn.onclick = closeAction;
+            closeBtn.onmousedown = closeAction;
+            closeBtn.ontouchstart = closeAction;
+            closeBtn.ontouchend = closeAction;
+            
+            // Add CSS to ensure button is touchable on mobile
+            closeBtn.style.touchAction = 'manipulation';
+            closeBtn.style.userSelect = 'none';
+            closeBtn.style.webkitUserSelect = 'none';
+            closeBtn.style.webkitTouchCallout = 'none';
+        }
+        
+        // Refresh Feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    }, 100);
 }
 
 function scanQRFromFile() {
@@ -367,23 +408,44 @@ function showMonumentInfo(monumentId) {
     }
 }
 
+// Flag to prevent multiple close operations
+let isClosingQRScanner = false;
+
 function closeQRScanner() {
+    // Prevent multiple simultaneous close operations
+    if (isClosingQRScanner) {
+        return;
+    }
+    isClosingQRScanner = true;
+    
+    console.log('Closing QR Scanner...');
+    
+    // Stop the QR scanner if it exists
     if (qrScanner) {
-        qrScanner.stop().then(() => {
-            qrScanner.clear();
+        try {
+            qrScanner.stop().then(() => {
+                if (qrScanner && typeof qrScanner.clear === 'function') {
+                    qrScanner.clear();
+                }
+                qrScanner = null;
+            }).catch(err => {
+                console.log('Error stopping QR scanner:', err);
+                qrScanner = null;
+            });
+        } catch (error) {
+            console.log('Error in QR scanner cleanup:', error);
             qrScanner = null;
-        }).catch(err => {
-            console.log('Error stopping QR scanner:', err);
-            qrScanner = null; // Force reset even if stop fails
-        });
+        }
     }
     
+    // Hide the modal
     const modal = document.getElementById('qr-modal');
     if (modal) {
         modal.style.display = 'none';
+        console.log('Modal hidden');
     }
     
-    // Clear the QR reader div
+    // Clear the content
     const qrReaderDiv = document.getElementById('qr-reader');
     const qrResultDiv = document.getElementById('qr-result');
     
@@ -393,6 +455,11 @@ function closeQRScanner() {
     if (qrResultDiv) {
         qrResultDiv.innerHTML = '';
     }
+    
+    // Reset the flag after a short delay
+    setTimeout(() => {
+        isClosingQRScanner = false;
+    }, 500);
 }
 
 // Monument Functions
@@ -932,30 +999,35 @@ function debugApp() {
 // Make debug function available globally
 window.debugApp = debugApp;
 
-// Add event listener for QR modal close button
+// Global event delegation for QR modal close button
+document.addEventListener('click', function(e) {
+    // Check if clicked element is the QR close button
+    if (e.target && (e.target.id === 'qr-close-btn' || e.target.closest('#qr-close-btn'))) {
+        console.log('Global close button clicked');
+        e.preventDefault();
+        e.stopPropagation();
+        closeQRScanner();
+        return false;
+    }
+});
+
+// Additional event listeners for touch devices
+document.addEventListener('touchend', function(e) {
+    if (e.target && (e.target.id === 'qr-close-btn' || e.target.closest('#qr-close-btn'))) {
+        console.log('Global close button touched');
+        e.preventDefault();
+        e.stopPropagation();
+        closeQRScanner();
+        return false;
+    }
+});
+
+// Backup initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // Close QR modal when clicking the X button
-    const qrCloseBtn = document.getElementById('qr-close-btn');
-    if (qrCloseBtn) {
-        qrCloseBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeQRScanner();
-        });
-    }
-    
-    // Close QR modal when clicking outside the modal content
-    const qrModal = document.getElementById('qr-modal');
-    if (qrModal) {
-        qrModal.addEventListener('click', function(e) {
-            if (e.target === qrModal) {
-                closeQRScanner();
-            }
-        });
-    }
-    
     // Initialize Feather icons for the modal
-    feather.replace();
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
 });
 
 console.log('Regalbuto Heritage - Script loaded successfully');

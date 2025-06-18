@@ -1381,12 +1381,12 @@
     </main>
 
     <!-- QR Scanner Modal (Global) -->
-    <div id="qr-modal" class="modal">
-        <div class="modal-content">
+    <div id="qr-modal" class="modal" onclick="if(event.target === this) closeQRScanner()">
+        <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <h3>Scansiona QR Code</h3>
-                <button id="qr-close-btn" class="close-btn" onclick="closeQRScanner()">
-                    <i data-feather="x"></i>
+                <button id="qr-close-btn" class="close-btn" type="button" onclick="document.getElementById('qr-modal').style.display='none';" ontouchstart="document.getElementById('qr-modal').style.display='none';">
+                    ✕
                 </button>
             </div>
             <div id="qr-reader"></div>
@@ -1429,5 +1429,6 @@
     </audio>
 
     <script src="script.js"></script>
+<!-- 18-06-2025-16-20 -->
 </body>
 </html>
