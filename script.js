@@ -175,14 +175,33 @@ function startQRScanner() {
         feather.replace();
     }
     
-    // Add event listeners for modal close
+    // Add multiple event listeners for modal close to ensure it works
     const closeBtn = modal.querySelector('.close-btn');
     if (closeBtn) {
-        closeBtn.onclick = function(e) {
+        // Remove any existing listeners first
+        closeBtn.replaceWith(closeBtn.cloneNode(true));
+        const newCloseBtn = modal.querySelector('.close-btn');
+        
+        // Add onclick handler
+        newCloseBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
             closeQRScanner();
         };
+        
+        // Add addEventListener as backup
+        newCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeQRScanner();
+        });
+        
+        // Add touch event for mobile
+        newCloseBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeQRScanner();
+        });
     }
     
     // Close on background click
@@ -912,5 +931,31 @@ function debugApp() {
 
 // Make debug function available globally
 window.debugApp = debugApp;
+
+// Add event listener for QR modal close button
+document.addEventListener('DOMContentLoaded', function() {
+    // Close QR modal when clicking the X button
+    const qrCloseBtn = document.getElementById('qr-close-btn');
+    if (qrCloseBtn) {
+        qrCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeQRScanner();
+        });
+    }
+    
+    // Close QR modal when clicking outside the modal content
+    const qrModal = document.getElementById('qr-modal');
+    if (qrModal) {
+        qrModal.addEventListener('click', function(e) {
+            if (e.target === qrModal) {
+                closeQRScanner();
+            }
+        });
+    }
+    
+    // Initialize Feather icons for the modal
+    feather.replace();
+});
 
 console.log('Regalbuto Heritage - Script loaded successfully');
