@@ -170,6 +170,28 @@ function startQRScanner() {
     
     modal.style.display = 'block';
     
+    // Initialize Feather icons for the modal
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+    
+    // Add event listeners for modal close
+    const closeBtn = modal.querySelector('.close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeQRScanner();
+        };
+    }
+    
+    // Close on background click
+    modal.onclick = function(event) {
+        if (event.target === modal) {
+            closeQRScanner();
+        }
+    };
+    
     // Show loading message
     qrReaderDiv.innerHTML = `
         <div style="text-align: center; padding: 2rem;">
@@ -504,23 +526,22 @@ function getCategoryDisplayName(category) {
 }
 
 function openMapLocation(monumentId) {
-    // Define specific Google Maps URLs for each location
+    // Define Google Maps URLs that open the native app with coordinates
     const mapUrls = {
-        'lago-pozzillo': 'https://www.google.com/maps/place/Lago+Pozzillo/@37.645,14.62,15z',
-        'parco-avventura': 'https://www.google.com/maps/place/Pozzillo+Avventura/@37.6587843,14.6040333,15.75z/data=!4m14!1m7!3m6!1s0x131134246a8cb2d1:0x11e270f0c16a5b55!2sLago+Pozzillo!8m2!3d37.6587117!4d14.5975772!16s%2Fm%2F05p1h9s!3m5!1s0x131135d152f972af:0xbcb2b1127684d3cf!8m2!3d37.6589778!4d14.6188852!16s%2Fg%2F1ptwm8k1c?entry=ttu&g_ep=EgoyMDI1MDYxMS4wIKXMDSoASAFQAw%3D%3D',
-        'san-calogero': 'https://www.google.com/maps/place/Area+Sosta+San+Calogero/@37.65,14.64,15z',
-        'san-basilio': 'https://www.google.com/maps/place/Chiesa+madre+di+San+Basilio/@37.6526476,14.6383187,17z/data=!3m1!4b1!4m6!3m5!1s0x131135e185e8ac8b:0xa78d22528c9e46e9!8m2!3d37.6526434!4d14.6408936!16s%2Fg%2F11clyt3rvj?entry=ttu&g_ep=EgoyMDI1MDYxMS4wIKXMDSoASAFQAw%3D%3D',
-        'sant-antonio': 'https://www.google.com/maps/place/Eremo+di+San+Antonio+Abate+extra+mura/@37.6613073,14.6224804,14z/data=!4m10!1m2!2m1!1sconvento+sant\'antonio+regalbuto!3m6!1s0x1311353a34db2ead:0x4f1eefe5985a29f6!8m2!3d37.6731697!4d14.6452891!15sCh9jb252ZW50byBzYW50J2FudG9uaW8gcmVnYWxidXRvkgEHbnVubmVyeaoBYxABKhkiFWNvbnZlbnRvIHNhbnQgYW50b25pbygHMh8QASIb-zyDpBqBFaYONEOdQGfhPuTA6g6DEoSLleP6MiMQAiIfY29udmVudG8gc2FudCBhbnRvbmlvIHJlZ2FsYnV0b-ABAA!16s%2Fg%2F11j3m255my?entry=ttu&g_ep=EgoyMDI1MDYxMS4wIKXMDSoASAFQAw%3D%3D',
-        'calvario': 'https://www.google.com/maps/place/Monte+Calvario/@37.6361624,14.7254422,13.25z/data=!4m6!3m5!1s0x1311494fcc90eb39:0x9b4b15692b59918c!8m2!3d37.6264741!4d14.7434425!16s%2Fg%2F11gcn1xmyy?entry=ttu&g_ep=EgoyMDI1MDYxMS4wIKXMDSoASAFQAw%3D%3D',
-        'tecnopolo': 'https://www.google.com/maps/place/Tecnopolo+Magnetico/@37.6555337,14.6256474,17z/data=!3m1!4b1!4m6!3m5!1s0x131135004bd582e3:0xcdd4146a12d3cf67!8m2!3d37.6555295!4d14.6282223!16s%2Fg%2F11yf2nsc88?entry=ttu&g_ep=EgoyMDI1MDYxMS4wIKXMDSoASAFQAw%3D%3D',
-        'santantonio': 'https://www.google.com/maps/place/Eremo+di+San+Antonio+Abate+extra+mura/@37.6613073,14.6224804,14z/data=!4m10!1m2!2m1!1sconvento+sant\'antonio+regalbuto!3m6!1s0x1311353a34db2ead:0x4f1eefe5985a29f6!8m2!3d37.6731697!4d14.6452891!15sCh9jb252ZW50byBzYW50J2FudG9uaW8gcmVnYWxidXRvkgEHbnVubmVyeaoBYxABKhkiFWNvbnZlbnRvIHNhbnQgYW50b25pbygHMh8QASIb-zyDpBqBFaYONEOdQGfhPuTA6g6DEoSLleP6MiMQAiIfY29udmVudG8gc2FudCBhbnRvbmlvIHJlZ2FsYnV0b-ABAA!16s%2Fg%2F11j3m255my?entry=ttu&g_ep=EgoyMDI1MDYxMS4wIKXMDSoASAFQAw%3D%3D',
-        'purgatorio': 'https://www.google.com/maps/place/Chiesa+del+Purgatorio/@37.6300,14.6400,17z',
-        'punto-panoramico': 'https://www.google.com/maps/place/Punto+Panoramico/@37.6350,14.6450,17z',
-        'default': 'https://www.google.com/maps/place/Regalbuto,+Province+of+Enna,+Italy/@37.6395,14.6351,14z'
+        'lago-pozzillo': 'https://maps.google.com/maps?q=37.6587117,14.5975772&ll=37.6587117,14.5975772&z=16',
+        'parco-avventura': 'https://maps.google.com/maps?q=37.6589778,14.6188852&ll=37.6589778,14.6188852&z=16',
+        'san-basilio': 'https://maps.google.com/maps?q=37.6526434,14.6408936&ll=37.6526434,14.6408936&z=17',
+        'santantonio': 'https://maps.google.com/maps?q=37.6731697,14.6452891&ll=37.6731697,14.6452891&z=16',
+        'calvario': 'https://maps.google.com/maps?q=37.6264741,14.7434425&ll=37.6264741,14.7434425&z=15',
+        'tecnopolo': 'https://maps.google.com/maps?q=37.6555295,14.6282223&ll=37.6555295,14.6282223&z=17',
+        'purgatorio': 'https://maps.google.com/maps?q=37.6526434,14.6408936&ll=37.6526434,14.6408936&z=17',
+        'default': 'https://maps.google.com/maps?q=37.6395,14.6351&ll=37.6395,14.6351&z=14'
     };
     
     const url = mapUrls[monumentId] || mapUrls['default'];
-    window.open(url, '_blank');
+    
+    // Open in a new window/tab to trigger the Maps app
+    window.open(url, '_blank', 'noopener,noreferrer');
     
     showNotification('Apertura Google Maps...', 'info');
 }
