@@ -116,6 +116,13 @@ function switchTab(tabName) {
         closeQRScanner();
     }
     
+    // Force scroll to top immediately
+    window.scrollTo(0, 0);
+    
+    // Also ensure body scroll is reset
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
     // Hide all sections
     const sections = document.querySelectorAll('.section');
     sections.forEach(section => {
